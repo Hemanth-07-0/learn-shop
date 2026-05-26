@@ -1417,10 +1417,24 @@ app.delete('/api/bank-accounts/:accountId', (req, res) => {
   }
 });
 
-// Root health route
-app.get('/', (req, res) => {
-  res.send('LearnShop backend is running. Use /api/* endpoints.');
-});
+const FRONTEND_BUILD_PATH = path.join(__dirname, '../frontend/dist');
+const FRONTEND_INDEX_FILE = path.join(FRONTEND_BUILD_PATH, 'index.html');
+const HAS_FRONTEND_BUILD = fs.existsSync(FRONTEND_INDEX_FILE);
+
+if (HAS_FRONTEND_BUILD) {
+  app.use(express.static(FRONTEND_BUILD_PATH));
+
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api/')) {
+      return next();
+    }
+    return res.sendFile(FRONTEND_INDEX_FILE);
+  });
+} else {
+  app.get('/', (req, res) => {
+    res.send('LearnShop backend is running. Use /api/* endpoints.');
+  });
+}
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
