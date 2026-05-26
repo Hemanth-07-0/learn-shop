@@ -1417,6 +1417,11 @@ app.delete('/api/bank-accounts/:accountId', (req, res) => {
   }
 });
 
+// Root health route
+app.get('/', (req, res) => {
+  res.send('LearnShop backend is running. Use /api/* endpoints.');
+});
+
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });
