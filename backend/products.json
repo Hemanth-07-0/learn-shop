@@ -1,0 +1,20 @@
+[
+  {
+    "id": "intro-eating",
+    "name": "Introduction to Eating",
+    "description": "A guided starter program for food habits, kitchen basics, and confidence-building routines.",
+    "amount": 100
+  },
+  {
+    "id": "benefits-eating",
+    "name": "Benefits of Eating",
+    "description": "A practical course focused on nutrition awareness, meal timing, and better daily energy.",
+    "amount": 49900
+  },
+  {
+    "id": "what-is-food",
+    "name": "What is food?",
+    "description": "A quick fundamentals track explaining ingredients, food groups, and smart buying choices.",
+    "amount": 29900
+  }
+]

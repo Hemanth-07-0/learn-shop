@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LearnShop - Login & Register</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 450px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 40px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 2em;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 0.95em;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1em;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 20px 0;
+            color: #999;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #ddd;
+        }
+
+        .divider span {
+            padding: 0 10px;
+        }
+
+        .toggle-link {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+        }
+
+        .toggle-link a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .toggle-link a:hover {
+            text-decoration: underline;
+        }
+
+        .alert {
+            padding: 12px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .alert-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .form-container {
+            display: none;
+        }
+
+        .form-container.active {
+            display: block;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .btn:disabled {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        input[type="checkbox"] {
+            width: auto;
+            margin-right: 8px;
+        }
+
+        .checkbox-group label {
+            margin-bottom: 0;
+            font-weight: normal;
+        }
+
+        .security-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 20px;
+            padding: 10px;
+            background: #f0f4ff;
+            border-radius: 5px;
+            font-size: 0.9em;
+            color: #667eea;
+            text-align: center;
+        }
+
+        .lock-icon {
+            width: 20px;
+            height: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="header">
+                <h1>🎓 LearnShop</h1>
+                <p>Secure Payment System</p>
+            </div>
+
+            <div id="alerts"></div>
+
+            <!-- Login Form -->
+            <div id="loginForm" class="form-container active">
+                <form onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label for="loginEmail">Email Address</label>
+                        <input type="email" id="loginEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="loginPassword">Password</label>
+                        <input type="password" id="loginPassword" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="loginBtn">
+                        Sign In
+                    </button>
+                </form>
+
+                <div class="toggle-link">
+                    Don't have an account? <a href="#" onclick="toggleForms(event)">Create one</a>
+                </div>
+
+                <div class="security-badge">
+                    <svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
+                    <span>Secure Login - Your data is encrypted</span>
+                </div>
+            </div>
+
+            <!-- Register Form -->
+            <div id="registerForm" class="form-container">
+                <form onsubmit="handleRegister(event)">
+                    <div class="form-group">
+                        <label for="regLoginName">Username</label>
+                        <input type="text" id="regLoginName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="regEmail">Email Address</label>
+                        <input type="email" id="regEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="regPassword">Password</label>
+                        <input type="password" id="regPassword" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="regAddress">Address</label>
+                        <textarea id="regAddress" rows="3" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="regPincode">Pincode</label>
+                        <input type="text" id="regPincode" pattern="[0-9]{4,10}" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary" id="registerBtn">
+                        Create Account
+                    </button>
+                </form>
+
+                <div class="toggle-link">
+                    Already have an account? <a href="#" onclick="toggleForms(event)">Sign in</a>
+                </div>
+
+                <div class="security-badge">
+                    <svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
+                    <span>Secure Registration - Scrypt encrypted password</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin;
+
+        function toggleForms(event) {
+            event.preventDefault();
+            document.getElementById('loginForm').classList.toggle('active');
+            document.getElementById('registerForm').classList.toggle('active');
+        }
+
+        async function handleLogin(event) {
+            event.preventDefault();
+            const loginBtn = document.getElementById('loginBtn');
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+
+            try {
+                loginBtn.disabled = true;
+                loginBtn.innerHTML = '<div class="loading"></div>Signing in...';
+
+                const response = await fetch(`${API_BASE}/api/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email, password }),
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Login failed');
+                }
+
+                const data = await response.json();
+                localStorage.setItem('authToken', data.token);
+                localStorage.setItem('user', JSON.stringify(data.user));
+
+                showAlert('✅ Login successful! Redirecting...', 'success');
+                setTimeout(() => {
+                    window.location.href = '/checkout.html';
+                }, 1500);
+            } catch (error) {
+                console.error('Login error:', error);
+                showAlert(error.message || 'Login failed', 'error');
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = 'Sign In';
+            }
+        }
+
+        async function handleRegister(event) {
+            event.preventDefault();
+            const registerBtn = document.getElementById('registerBtn');
+            const loginName = document.getElementById('regLoginName').value;
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+            const address = document.getElementById('regAddress').value;
+            const pincode = document.getElementById('regPincode').value;
+
+            try {
+                registerBtn.disabled = true;
+                registerBtn.innerHTML = '<div class="loading"></div>Creating account...';
+
+                const response = await fetch(`${API_BASE}/api/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        loginName,
+                        email,
+                        password,
+                        address,
+                        pincode,
+                    }),
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.message || 'Registration failed');
+                }
+
+                showAlert('✅ Account created! Please sign in now.', 'success');
+                setTimeout(() => {
+                    document.getElementById('registerForm').classList.remove('active');
+                    document.getElementById('loginForm').classList.add('active');
+                    document.getElementById('loginEmail').value = email;
+                }, 1500);
+            } catch (error) {
+                console.error('Register error:', error);
+                showAlert(error.message || 'Registration failed', 'error');
+                registerBtn.disabled = false;
+                registerBtn.innerHTML = 'Create Account';
+            }
+        }
+
+        function showAlert(message, type) {
+            const container = document.getElementById('alerts');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.textContent = message;
+            container.appendChild(alert);
+
+            setTimeout(() => {
+                alert.remove();
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
