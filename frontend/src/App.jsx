@@ -103,7 +103,7 @@ function App() {
       <div className="container">
         <Routes>
           <Route path="/" element={<Home user={user} />} />
-          <Route path="/videos" element={<Videos />} />
+          <Route path="/videos" element={<Videos user={user} />} />
           <Route
             path="/products"
             element={

@@ -13,6 +13,11 @@ Thumbs.db
 .env.*
 *.local
 
+.env
+backend/.env
+frontend/.env
+node_modules
+
 backend/users.json
 backend/users.xlsx
 confidential_information/

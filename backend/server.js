@@ -1,11 +1,19 @@
-const express = require('express');
+const express = require("express");
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const XLSX = require('xlsx');
+const nodemailer = require('nodemailer');
 
 loadEnvFile(path.join(__dirname, '.env'));
+
+// OTP Configuration
+const OTP_EXPIRY_MS = 10 * 60 * 1000; // 10 minutes
+const OTP_LENGTH = 6;
+const OTP_STORAGE_FILE = path.join(__dirname, 'otp_cache.json');
+const VALID_COUPON_CODE = 'BHAVYA2026';
+const COUPON_STORAGE_FILE = path.join(__dirname, 'coupon_cache.json');
 
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
@@ -397,6 +405,143 @@ function isAdminEmail(email) {
   return Boolean(ADMIN_EMAIL) && normalizeEmail(email) === ADMIN_EMAIL;
 }
 
+// ===== OTP & Email Functions =====
+function initializeEmailTransporter() {
+  return nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+  });
+}
+
+function generateOTP() {
+  return Math.floor(Math.random() * Math.pow(10, OTP_LENGTH))
+    .toString()
+    .padStart(OTP_LENGTH, '0');
+}
+
+function loadOTPCache() {
+  if (!fs.existsSync(OTP_STORAGE_FILE)) {
+    return {};
+  }
+  const raw = fs.readFileSync(OTP_STORAGE_FILE, 'utf8').trim();
+  if (!raw) return {};
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return {};
+  }
+}
+
+function saveOTPCache(cache) {
+  fs.writeFileSync(OTP_STORAGE_FILE, JSON.stringify(cache, null, 2));
+}
+
+function storeOTP(email, otp) {
+  const cache = loadOTPCache();
+  cache[normalizeEmail(email)] = {
+    otp,
+    expiresAt: Date.now() + OTP_EXPIRY_MS,
+    attempts: 0,
+  };
+  saveOTPCache(cache);
+}
+
+function verifyOTP(email, otp) {
+  const cache = loadOTPCache();
+  const record = cache[normalizeEmail(email)];
+  
+  if (!record) {
+    return { valid: false, message: 'OTP not found. Request a new one.' };
+  }
+  
+  if (Date.now() > record.expiresAt) {
+    delete cache[normalizeEmail(email)];
+    saveOTPCache(cache);
+    return { valid: false, message: 'OTP has expired. Request a new one.' };
+  }
+  
+  if (record.attempts >= 3) {
+    delete cache[normalizeEmail(email)];
+    saveOTPCache(cache);
+    return { valid: false, message: 'Too many attempts. Request a new OTP.' };
+  }
+  
+  if (record.otp !== otp) {
+    record.attempts += 1;
+    saveOTPCache(cache);
+    return { valid: false, message: 'Invalid OTP. Try again.' };
+  }
+  
+  delete cache[normalizeEmail(email)];
+  saveOTPCache(cache);
+  return { valid: true, message: 'OTP verified successfully' };
+}
+
+async function sendOTPEmail(email, otp) {
+  try {
+    const transporter = initializeEmailTransporter();
+    const mailOptions = {
+      from: process.env.EMAIL_USER || 'your-email@gmail.com',
+      to: email,
+      subject: 'Your LearnShop OTP Code',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #2f6fed;">LearnShop - Email Verification</h2>
+          <p>Your One-Time Password (OTP) is:</p>
+          <h1 style="color: #2f6fed; letter-spacing: 5px; font-size: 32px;">${otp}</h1>
+          <p style="color: #666;">This OTP will expire in 10 minutes.</p>
+          <p style="color: #999; font-size: 12px;">If you didn't request this, please ignore this email.</p>
+        </div>
+      `,
+    };
+    
+    await transporter.sendMail(mailOptions);
+    return { success: true, message: 'OTP sent to email' };
+  } catch (error) {
+    console.error('Email sending failed:', error);
+    return { success: false, message: 'Unable to send OTP email. Check email configuration.' };
+  }
+}
+
+function loadCouponCache() {
+  if (!fs.existsSync(COUPON_STORAGE_FILE)) {
+    return {};
+  }
+  const raw = fs.readFileSync(COUPON_STORAGE_FILE, 'utf8').trim();
+  if (!raw) return {};
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return {};
+  }
+}
+
+function saveCouponCache(cache) {
+  fs.writeFileSync(COUPON_STORAGE_FILE, JSON.stringify(cache, null, 2));
+}
+
+function verifyCoupon(email, code) {
+  if (normalizeText(code) !== VALID_COUPON_CODE) {
+    return { valid: false, message: 'Invalid coupon code' };
+  }
+  
+  const cache = loadCouponCache();
+  cache[normalizeEmail(email)] = {
+    verified: true,
+    verifiedAt: new Date().toISOString(),
+  };
+  saveCouponCache(cache);
+  return { valid: true, message: 'Coupon verified' };
+}
+
+function isCouponVerified(email) {
+  const cache = loadCouponCache();
+  return cache[normalizeEmail(email)] && cache[normalizeEmail(email)].verified;
+}
+
 function createSignedValue(value) {
   return crypto.createHmac('sha256', APP_AUTH_SECRET).update(value).digest('hex');
 }
@@ -763,16 +908,15 @@ function sanitizeBankAccount(account) {
 }
 
 
-app.post('/api/register', (req, res) => {
+app.post('/api/register', async (req, res) => {
   try {
     const body = req.body || {};
     const loginName = normalizeText(body.loginName);
     const email = normalizeEmail(body.email);
-    const password = typeof body.password === 'string' ? body.password : '';
     const address = normalizeText(body.address);
     const pincode = normalizeText(body.pincode);
 
-    if (!loginName || !email || !password || !address || !pincode) {
+    if (!loginName || !email || !address || !pincode) {
       return res.status(400).json({ message: 'All fields are required' });
     }
 
@@ -794,54 +938,144 @@ app.post('/api/register', (req, res) => {
       return res.status(400).json({ message: 'User already exists' });
     }
 
-    const newUser = {
+    // Generate and send OTP
+    const otp = generateOTP();
+    storeOTP(email, otp);
+    
+    const emailResult = await sendOTPEmail(email, otp);
+    if (!emailResult.success) {
+      return res.status(500).json({ message: emailResult.message });
+    }
+
+    // Store registration data temporarily
+    const pendingUsers = loadUsers();
+    pendingUsers.push({
       loginName,
       email,
-      password: hashPassword(password),
       address,
       pincode,
-      registeredAt: new Date().toISOString(),
-    };
+      status: 'pending_verification',
+      createdAt: new Date().toISOString(),
+    });
+    saveUsers(pendingUsers);
 
-    users.push(newUser);
-    saveUsers(users);
-
-    return res.json({ message: 'User registered successfully', user: { loginName, email } });
+    return res.json({ 
+      message: 'OTP sent to your email. Verify to complete registration.',
+      email,
+      requiresOTP: true 
+    });
   } catch (error) {
     console.error('Register failed:', error);
     return res.status(500).json({ message: 'Unable to register right now' });
   }
 });
 
-app.post('/api/login', (req, res) => {
+app.post('/api/register/verify-otp', (req, res) => {
   try {
     const body = req.body || {};
     const email = normalizeEmail(body.email);
-    const password = typeof body.password === 'string' ? body.password : '';
+    const otp = normalizeText(body.otp);
 
-    if (!email || !password) {
-      return res.status(400).json({ message: 'Email and password are required' });
+    if (!email || !otp) {
+      return res.status(400).json({ message: 'Email and OTP are required' });
+    }
+
+    const otpCheck = verifyOTP(email, otp);
+    if (!otpCheck.valid) {
+      return res.status(401).json({ message: otpCheck.message });
     }
 
     const users = loadUsers();
     const userIndex = users.findIndex((user) => normalizeEmail(user.email) === email);
-    const user = users[userIndex];
-    const passwordCheck = verifyPassword(password, user && user.password);
-
-    if (!user || !passwordCheck.isValid) {
-      return res.status(401).json({ message: 'Invalid email or password' });
+    
+    if (userIndex === -1) {
+      return res.status(404).json({ message: 'Registration data not found' });
     }
 
-    if (passwordCheck.needsUpgrade) {
-      try {
-        users[userIndex] = {
-          ...user,
-          password: hashPassword(password),
-        };
-        saveUsers(users);
-      } catch (error) {
-        console.error('Password upgrade failed:', error);
-      }
+    const user = users[userIndex];
+    if (user.status !== 'pending_verification') {
+      return res.status(400).json({ message: 'User registration already verified or invalid' });
+    }
+
+    // Mark user as verified
+    users[userIndex] = {
+      ...user,
+      status: 'verified',
+      verifiedAt: new Date().toISOString(),
+    };
+    delete users[userIndex].password; // Remove password field as we're not using it
+    saveUsers(users);
+
+    return res.json({ 
+      message: 'Registration verified successfully. You can now login.',
+      user: { loginName: user.loginName, email: user.email }
+    });
+  } catch (error) {
+    console.error('Register verification failed:', error);
+    return res.status(500).json({ message: 'Unable to verify registration right now' });
+  }
+});
+
+app.post('/api/login', async (req, res) => {
+  try {
+    const body = req.body || {};
+    const email = normalizeEmail(body.email);
+
+    if (!email) {
+      return res.status(400).json({ message: 'Email is required' });
+    }
+
+    if (!isValidEmail(email)) {
+      return res.status(400).json({ message: 'Enter a valid email address' });
+    }
+
+    const users = loadUsers();
+    const user = users.find((user) => normalizeEmail(user.email) === email && (user.status === 'verified' || !user.status));
+
+    if (!user) {
+      return res.status(401).json({ message: 'Email not found or not verified' });
+    }
+
+    // Generate and send OTP
+    const otp = generateOTP();
+    storeOTP(email, otp);
+    
+    const emailResult = await sendOTPEmail(email, otp);
+    if (!emailResult.success) {
+      return res.status(500).json({ message: emailResult.message });
+    }
+
+    return res.json({ 
+      message: 'OTP sent to your email',
+      email,
+      requiresOTP: true 
+    });
+  } catch (error) {
+    console.error('Login failed:', error);
+    return res.status(500).json({ message: 'Unable to sign in right now' });
+  }
+});
+
+app.post('/api/login/verify-otp', (req, res) => {
+  try {
+    const body = req.body || {};
+    const email = normalizeEmail(body.email);
+    const otp = normalizeText(body.otp);
+
+    if (!email || !otp) {
+      return res.status(400).json({ message: 'Email and OTP are required' });
+    }
+
+    const otpCheck = verifyOTP(email, otp);
+    if (!otpCheck.valid) {
+      return res.status(401).json({ message: otpCheck.message });
+    }
+
+    const users = loadUsers();
+    const user = users.find((user) => normalizeEmail(user.email) === email && (user.status === 'verified' || !user.status));
+
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid email or user not verified' });
     }
 
     const token = createAuthToken(user);
@@ -856,8 +1090,8 @@ app.post('/api/login', (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Login failed:', error);
-    return res.status(500).json({ message: 'Unable to sign in right now' });
+    console.error('Login verification failed:', error);
+    return res.status(500).json({ message: 'Unable to verify login right now' });
   }
 });
 
@@ -879,6 +1113,52 @@ app.get('/api/auth/me', (req, res) => {
   } catch (error) {
     console.error('Auth session check failed:', error);
     return res.status(500).json({ message: 'Unable to validate session right now' });
+  }
+});
+
+app.post('/api/videos/verify-coupon', (req, res) => {
+  try {
+    const authenticatedUser = requireAuth(req, res);
+    if (!authenticatedUser) {
+      return undefined;
+    }
+
+    const body = req.body || {};
+    const couponCode = normalizeText(body.couponCode);
+
+    if (!couponCode) {
+      return res.status(400).json({ message: 'Coupon code is required' });
+    }
+
+    const result = verifyCoupon(authenticatedUser.email, couponCode);
+    
+    if (!result.valid) {
+      return res.status(401).json({ message: result.message });
+    }
+
+    return res.json({ 
+      message: result.message,
+      verified: true,
+      email: authenticatedUser.email 
+    });
+  } catch (error) {
+    console.error('Coupon verification failed:', error);
+    return res.status(500).json({ message: 'Unable to verify coupon right now' });
+  }
+});
+
+app.get('/api/videos/check-coupon', (req, res) => {
+  try {
+    const authenticatedUser = requireAuth(req, res);
+    if (!authenticatedUser) {
+      return undefined;
+    }
+
+    const verified = isCouponVerified(authenticatedUser.email);
+    return res.json({ verified });
+  } catch (error) {
+    console.error('Coupon check failed:', error);
+    return res.status(500).json({ message: 'Unable to check coupon status' });
   }
 });
 

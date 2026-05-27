@@ -785,3 +785,301 @@ input {
     padding: 28px;
   }
 }
+
+/* ===== OTP & Enhanced UI Styles ===== */
+.otp-input {
+  letter-spacing: 8px;
+  font-size: 24px;
+  font-weight: 600;
+  text-align: center !important;
+  tracking: 3px;
+}
+
+.otp-email-display {
+  font-size: 14px;
+  color: #64748b;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.otp-email-display strong {
+  color: #2f6fed;
+  font-weight: 600;
+}
+
+.otp-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 12px;
+  justify-content: center;
+}
+
+.btn-secondary-text {
+  background: transparent;
+  color: #2f6fed;
+  border: none;
+  padding: 10px 12px;
+  font-size: 14px;
+  font-weight: 600;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.btn-secondary-text:hover:not(:disabled) {
+  color: #2551c3;
+  transform: translateY(-1px);
+}
+
+.btn-secondary-text:disabled {
+  color: #9ca3af;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.login-message.success {
+  background: #ecfdf5;
+  border-color: #bbf7d0;
+  color: #166534;
+}
+
+.login-message.error {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #b91c1c;
+}
+
+/* ===== Coupon Lock Modal ===== */
+.coupon-lock-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  padding: 40px 20px;
+}
+
+.coupon-modal {
+  width: 100%;
+  max-width: 480px;
+}
+
+.coupon-modal-content {
+  background: linear-gradient(135deg, #ffffff, #f8faff);
+  border-radius: 28px;
+  padding: 48px 40px;
+  box-shadow: 0 28px 80px rgba(15, 23, 42, 0.15);
+  text-align: center;
+  animation: slideUp 0.4s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.coupon-modal-content h2 {
+  font-size: 32px;
+  color: #102a43;
+  margin-bottom: 16px;
+}
+
+.coupon-modal-content > p {
+  color: #64748b;
+  font-size: 15px;
+  margin-bottom: 28px;
+  line-height: 1.6;
+}
+
+.coupon-form {
+  display: grid;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.coupon-input {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 2px solid #e5e7eb;
+  background: #f8fafc;
+  color: #0f172a;
+  font-size: 16px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.coupon-input:focus {
+  outline: none;
+  border-color: #2f6fed;
+  box-shadow: 0 0 0 4px rgba(47, 111, 237, 0.12);
+}
+
+.coupon-input::placeholder {
+  letter-spacing: 1px;
+  opacity: 0.6;
+}
+
+.coupon-message {
+  padding: 14px 16px;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 500;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.coupon-message.success {
+  background: #ecfdf5;
+  border-left: 4px solid #10b981;
+  color: #166534;
+}
+
+.coupon-message.error {
+  background: #fef2f2;
+  border-left: 4px solid #ef4444;
+  color: #b91c1c;
+}
+
+/* ===== Enhanced Form Styles ===== */
+.login-form .btn-primary {
+  padding: 14px 22px;
+  font-size: 15px;
+  letter-spacing: 0.5px;
+  transition: all 0.3s ease;
+}
+
+.login-form .btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #2f6fed, #2551c3);
+  box-shadow: 0 12px 32px rgba(47, 111, 237, 0.28);
+  transform: translateY(-2px);
+}
+
+.register-link {
+  text-align: center;
+  margin-top: 24px;
+  font-size: 14px;
+  color: #64748b;
+}
+
+.register-link a {
+  color: #2f6fed;
+  font-weight: 600;
+  transition: color 0.2s ease;
+  text-decoration: none;
+}
+
+.register-link a:hover {
+  color: #2551c3;
+}
+
+/* ===== Smooth Transitions ===== */
+input,
+button,
+.card,
+.btn {
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ===== Professional Navbar Enhancement ===== */
+.navbar {
+  animation: slideDown 0.4s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.navbar-brand {
+  transition: transform 0.3s ease;
+}
+
+.navbar-brand:hover {
+  transform: scale(1.02);
+}
+
+/* ===== Video Player Enhancement ===== */
+.video-frame {
+  transition: all 0.3s ease;
+}
+
+.video-frame:hover {
+  box-shadow: 0 28px 80px rgba(15, 23, 42, 0.18);
+}
+
+/* ===== Card Animations ===== */
+.card {
+  position: relative;
+  overflow: hidden;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+.card:hover::before {
+  left: 100%;
+}
+
+/* ===== Payment Badge Animation ===== */
+.payment-badge {
+  transition: all 0.3s ease;
+}
+
+.payment-badge:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.12);
+}
+
+/* ===== Responsive OTP ===== */
+@media (max-width: 520px) {
+  .coupon-modal-content {
+    padding: 36px 24px;
+  }
+
+  .coupon-modal-content h2 {
+    font-size: 24px;
+  }
+
+  .otp-actions {
+    flex-direction: column;
+  }
+
+  .btn-secondary-text {
+    width: 100%;
+  }
+}

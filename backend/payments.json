@@ -1,1 +1,32 @@
-[]
+[
+  {
+    "receiptNumber": "LS-00001",
+    "orderId": "order_SuIS9RucFpGsyv",
+    "paymentId": "",
+    "paidAt": "",
+    "amount": 100,
+    "currency": "INR",
+    "customerName": "lakshmish",
+    "customerEmail": "gechhassan17@gmail.com",
+    "customerAddress": "#25 GUVVALLA HALLI (V) ,KAMASAMUDRAM(P), BANGARPET(T),KOLAR(D),KARNATAKA-563124",
+    "customerPincode": "563129",
+    "paymentMode": "upi",
+    "verified": false,
+    "items": [
+      {
+        "id": "intro-eating",
+        "name": "Introduction to Eating",
+        "description": "A guided starter program for food habits, kitchen basics, and confidence-building routines.",
+        "quantity": 1,
+        "unitAmount": 100,
+        "amount": 100,
+        "currency": "INR"
+      }
+    ],
+    "product": {
+      "id": "intro-eating",
+      "name": "Introduction to Eating",
+      "description": "A guided starter program for food habits, kitchen basics, and confidence-building routines."
+    }
+  }
+]
